@@ -1,0 +1,19 @@
+groups:
+  - name: market-intelligence-service-alerts
+    rules:
+      - alert: MarketIntelligenceServiceDown
+        expr: mip_service_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Market Intelligence service is unavailable"
+          description: "{{ $labels.service }} has reported down for more than two minutes."
+      - alert: MarketIntelligenceServiceRestarted
+        expr: resets(mip_service_uptime_seconds[15m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Market Intelligence service restarted"
+          description: "{{ $labels.service }} uptime reset within the last 15 minutes."

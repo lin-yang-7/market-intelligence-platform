@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: mip-http-services
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - api-gateway:8000
+          - market-service:8001
+          - feature-service:8003
+          - ranking-service:8004
+          - signal-service:8005
+          - alert-service:8006
+          - screener-service:8007
+          - websocket-service:8008
+          - history-service:8009
+          - ai-engine:8010
+          - data-platform:8011
+          - notification-service:8012
+          - user-service:8013
+          - score-service:8014
+          - rule-service:8015
+          - feature-store-service:8016

@@ -1,0 +1,2 @@
+"""WebSocket service application."""
+

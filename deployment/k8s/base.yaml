@@ -1,0 +1,544 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: market-intelligence
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mip-config
+  namespace: market-intelligence
+data:
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  REDIS_URL: redis://redis:6379/0
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  CLICKHOUSE_URL: http://clickhouse:8123
+  CLICKHOUSE_DATABASE: market_intelligence
+  MARKET_SERVICE_URL: http://market-service:8001
+  FEATURE_SERVICE_URL: http://feature-service:8003
+  FEATURE_STORE_SERVICE_URL: http://feature-store-service:8016
+  RANKING_SERVICE_URL: http://ranking-service:8004
+  SIGNAL_SERVICE_URL: http://signal-service:8005
+  ALERT_SERVICE_URL: http://alert-service:8006
+  RULE_SERVICE_URL: http://rule-service:8015
+  SCREENER_SERVICE_URL: http://screener-service:8007
+  HISTORY_SERVICE_URL: http://history-service:8009
+  AI_SERVICE_URL: http://ai-engine:8010
+  SCORE_SERVICE_URL: http://score-service:8014
+  NOTIFICATION_SERVICE_URL: http://notification-service:8012
+  USER_SERVICE_URL: http://user-service:8013
+  DATA_PLATFORM_URL: http://data-platform:8011
+  WEBSOCKET_SERVICE_URL: http://websocket-service:8008
+  REPOSITORY_BACKEND: redis
+  DATA_PLATFORM_STORAGE_BACKEND: clickhouse
+  AI_SCORING_ENABLED: "true"
+  SCORE_SERVICE_ENABLED: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mip-secrets
+  namespace: market-intelligence
+type: Opaque
+stringData:
+  # Replace before applying. Production/staging services reject this placeholder at startup.
+  JWT_SECRET: REPLACE_WITH_STRONG_SECRET
+  CLICKHOUSE_USER: default
+  CLICKHOUSE_PASSWORD: ""
+  NOTIFICATION_WEBHOOK_URL: ""
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_CHAT_ID: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.api_gateway.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: market-intelligence
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-service
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: market-service
+  template:
+    metadata:
+      labels:
+        app: market-service
+    spec:
+      containers:
+        - name: market-service
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.market_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8001
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: market-service
+  namespace: market-intelligence
+spec:
+  selector:
+    app: market-service
+  ports:
+    - port: 8001
+      targetPort: 8001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-service
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: feature-service
+  template:
+    metadata:
+      labels:
+        app: feature-service
+    spec:
+      containers:
+        - name: feature-service
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.feature_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+          ports:
+            - containerPort: 8003
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8003
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-service
+  namespace: market-intelligence
+spec:
+  selector:
+    app: feature-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ranking-service
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ranking-service
+  template:
+    metadata:
+      labels:
+        app: ranking-service
+    spec:
+      containers:
+        - name: ranking-service
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.ranking_service.app.main:app", "--host", "0.0.0.0", "--port", "8004"]
+          ports:
+            - containerPort: 8004
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8004
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ranking-service
+  namespace: market-intelligence
+spec:
+  selector:
+    app: ranking-service
+  ports:
+    - port: 8004
+      targetPort: 8004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-service
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: websocket-service
+  template:
+    metadata:
+      labels:
+        app: websocket-service
+    spec:
+      containers:
+        - name: websocket-service
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.websocket_service.app.main:app", "--host", "0.0.0.0", "--port", "8008"]
+          ports:
+            - containerPort: 8008
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8008
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8008
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-service
+  namespace: market-intelligence
+spec:
+  selector:
+    app: websocket-service
+  ports:
+    - port: 8008
+      targetPort: 8008
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: history-service
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: history-service
+  template:
+    metadata:
+      labels:
+        app: history-service
+    spec:
+      containers:
+        - name: history-service
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "services.history_service.app.main:app", "--host", "0.0.0.0", "--port", "8009"]
+          ports:
+            - containerPort: 8009
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8009
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8009
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: history-service
+  namespace: market-intelligence
+spec:
+  selector:
+    app: history-service
+  ports:
+    - port: 8009
+      targetPort: 8009
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-engine
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-engine
+  template:
+    metadata:
+      labels:
+        app: ai-engine
+    spec:
+      containers:
+        - name: ai-engine
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "ai_engine.app.main:app", "--host", "0.0.0.0", "--port", "8010"]
+          ports:
+            - containerPort: 8010
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8010
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8010
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-engine
+  namespace: market-intelligence
+spec:
+  selector:
+    app: ai-engine
+  ports:
+    - port: 8010
+      targetPort: 8010
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-platform
+  namespace: market-intelligence
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: data-platform
+  template:
+    metadata:
+      labels:
+        app: data-platform
+    spec:
+      containers:
+        - name: data-platform
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "data_platform.app.main:app", "--host", "0.0.0.0", "--port", "8011"]
+          ports:
+            - containerPort: 8011
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8011
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8011
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-platform
+  namespace: market-intelligence
+spec:
+  selector:
+    app: data-platform
+  ports:
+    - port: 8011
+      targetPort: 8011
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ranking-monitor-worker
+  namespace: market-intelligence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ranking-monitor-worker
+  template:
+    metadata:
+      labels:
+        app: ranking-monitor-worker
+    spec:
+      containers:
+        - name: ranking-monitor-worker
+          image: market-intelligence-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "services.ranking_service.app.monitor_worker"]
+          envFrom:
+            - configMapRef:
+                name: mip-config
+            - secretRef:
+                name: mip-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mip-ingress
+  namespace: market-intelligence
+spec:
+  rules:
+    - host: mip.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8000

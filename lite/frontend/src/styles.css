@@ -1,0 +1,13 @@
+:root { color: #16211f; background: #f4f7f5; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+* { box-sizing: border-box; } body { margin: 0; min-width: 320px; }
+.lite-shell { margin: 0 auto; max-width: 1440px; min-height: 100vh; padding: 40px 24px; }
+.lite-header { align-items: flex-start; display: flex; gap: 24px; justify-content: space-between; margin-bottom: 26px; }
+.lite-header h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -1.5px; margin: 4px 0 8px; }
+.lite-header p { color: #66736f; margin: 0; }.lite-eyebrow { color: #1f8a70 !important; font-size: 12px; font-weight: 800; letter-spacing: 1.2px; }
+.lite-header button { background: #1f8a70; border: 0; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 700; padding: 12px 18px; }.lite-header button:disabled { cursor: wait; opacity: .7; }
+.lite-error { background: #fff3e8; border: 1px solid #f2c997; border-radius: 8px; color: #8c4a05; padding: 12px; }
+.lite-metrics { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 22px 0; }.lite-metrics article, .lite-panel { background: #fff; border: 1px solid #d9e1dd; border-radius: 12px; padding: 18px; }
+.lite-metrics span { color: #66736f; display: block; font-size: 13px; margin-bottom: 8px; }.lite-metrics strong { font-size: 20px; }.lite-panel__header { margin-bottom: 16px; }.lite-panel h2 { margin: 0 0 5px; }.lite-panel p { color: #66736f; font-size: 13px; margin: 0; }
+.lite-table { overflow-x: auto; }.lite-table__row { align-items: center; border-top: 1px solid #edf0ee; display: grid; gap: 12px; grid-template-columns: 32px 100px 120px 75px 100px 75px minmax(260px, 1fr); min-width: 850px; padding: 13px 4px; }.lite-table__head { color: #66736f; font-size: 12px; font-weight: 700; }.lite-table small { color: #66736f; }
+.lite-up { color: #14805f; font-weight: 700; }.lite-down { color: #c04b4b; font-weight: 700; }.lite-direction { border-radius: 999px; font-size: 12px; font-weight: 800; padding: 5px 8px; text-align: center; }.lite-direction--看涨 { background: #e5f5ee; color: #08734f; }.lite-direction--看跌 { background: #fdeaea; color: #b63d3d; }.lite-direction--中性 { background: #eef1ef; color: #53615c; }
+@media (max-width: 760px) { .lite-shell { padding: 24px 14px; }.lite-header { flex-direction: column; }.lite-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }.lite-header button { width: 100%; } }

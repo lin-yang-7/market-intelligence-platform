@@ -1,0 +1,45 @@
+services:
+  api-gateway:
+    image: ${SERVICE_IMAGE}
+  auth-service:
+    image: ${SERVICE_IMAGE}
+  market-service:
+    image: ${SERVICE_IMAGE}
+  market-worker:
+    image: ${SERVICE_IMAGE}
+  feature-service:
+    image: ${SERVICE_IMAGE}
+  feature-worker:
+    image: ${SERVICE_IMAGE}
+  feature-store-service:
+    image: ${SERVICE_IMAGE}
+  ranking-service:
+    image: ${SERVICE_IMAGE}
+  ranking-monitor-worker:
+    image: ${SERVICE_IMAGE}
+  signal-service:
+    image: ${SERVICE_IMAGE}
+  alert-service:
+    image: ${SERVICE_IMAGE}
+  rule-service:
+    image: ${SERVICE_IMAGE}
+  screener-service:
+    image: ${SERVICE_IMAGE}
+  history-service:
+    image: ${SERVICE_IMAGE}
+  websocket-service:
+    image: ${SERVICE_IMAGE}
+  ai-engine:
+    image: ${SERVICE_IMAGE}
+  score-service:
+    image: ${SERVICE_IMAGE}
+  data-platform:
+    image: ${SERVICE_IMAGE}
+  data-platform-worker:
+    image: ${SERVICE_IMAGE}
+  notification-service:
+    image: ${SERVICE_IMAGE}
+  user-service:
+    image: ${SERVICE_IMAGE}
+  collector-service:
+    image: ${SERVICE_IMAGE}

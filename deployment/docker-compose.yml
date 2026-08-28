@@ -1,0 +1,405 @@
+services:
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.api_gateway.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN must be set}
+      MARKET_SERVICE_URL: http://market-service:8001
+      FEATURE_SERVICE_URL: http://feature-service:8003
+      FEATURE_STORE_SERVICE_URL: http://feature-store-service:8016
+      RANKING_SERVICE_URL: http://ranking-service:8004
+      SIGNAL_SERVICE_URL: http://signal-service:8005
+      ALERT_SERVICE_URL: http://alert-service:8006
+      RULE_SERVICE_URL: http://rule-service:8015
+      SCREENER_SERVICE_URL: http://screener-service:8007
+      HISTORY_SERVICE_URL: http://history-service:8009
+      AI_SERVICE_URL: http://ai-engine:8010
+      SCORE_SERVICE_URL: http://score-service:8014
+      NOTIFICATION_SERVICE_URL: http://notification-service:8012
+      USER_SERVICE_URL: http://user-service:8013
+      AI_SCORING_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - market-service
+      - feature-service
+      - feature-store-service
+      - ranking-service
+      - signal-service
+      - alert-service
+      - rule-service
+      - screener-service
+      - history-service
+      - ai-engine
+      - score-service
+      - notification-service
+      - user-service
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.auth_service.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+
+  market-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.market_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+
+  market-worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "-m", "services.market_service.app.consumer_main"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - redis
+      - kafka
+
+  feature-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.feature_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+    ports:
+      - "8003:8003"
+    depends_on:
+      - redis
+
+  feature-worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "-m", "services.feature_service.app.consumer_main"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC_FEATURE_UPDATED: feature.updated
+    depends_on:
+      - redis
+      - kafka
+
+  feature-store-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.feature_store_service.app.main:app", "--host", "0.0.0.0", "--port", "8016"]
+
+  ranking-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.ranking_service.app.main:app", "--host", "0.0.0.0", "--port", "8004"]
+    environment:
+      AI_SERVICE_URL: http://ai-engine:8010
+      AI_SCORING_ENABLED: "true"
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+      SCORE_SERVICE_URL: http://score-service:8014
+      SCORE_SERVICE_ENABLED: "true"
+    ports:
+      - "8004:8004"
+    depends_on:
+      - ai-engine
+      - redis
+      - score-service
+
+  ranking-monitor-worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "-m", "services.ranking_service.app.monitor_worker"]
+    environment:
+      RANKING_SERVICE_URL: http://ranking-service:8004
+      DATA_PLATFORM_URL: http://data-platform:8011
+      WEBSOCKET_SERVICE_URL: http://websocket-service:8008
+      NOTIFICATION_SERVICE_URL: http://notification-service:8012
+      RANKING_MONITOR_EXCHANGE: binance
+      RANKING_MONITOR_TYPES: abnormalBullish,opportunityBullish,riskBearish
+      RANKING_MONITOR_INTERVAL_SECONDS: 60
+      RANKING_MONITOR_LIMIT: 50
+    depends_on:
+      - ranking-service
+      - data-platform
+      - websocket-service
+      - notification-service
+
+  signal-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.signal_service.app.main:app", "--host", "0.0.0.0", "--port", "8005"]
+    ports:
+      - "8005:8005"
+
+  alert-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.alert_service.app.main:app", "--host", "0.0.0.0", "--port", "8006"]
+
+  rule-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.rule_service.app.main:app", "--host", "0.0.0.0", "--port", "8015"]
+
+  screener-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.screener_service.app.main:app", "--host", "0.0.0.0", "--port", "8007"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REPOSITORY_BACKEND: redis
+    ports:
+      - "8007:8007"
+    depends_on:
+      - redis
+
+  history-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.history_service.app.main:app", "--host", "0.0.0.0", "--port", "8009"]
+    environment:
+      MARKET_SERVICE_URL: http://market-service:8001
+      FEATURE_SERVICE_URL: http://feature-service:8003
+      SIGNAL_SERVICE_URL: http://signal-service:8005
+      DATA_PLATFORM_URL: http://data-platform:8011
+    ports:
+      - "8009:8009"
+    depends_on:
+      - market-service
+      - feature-service
+      - signal-service
+      - data-platform
+
+  websocket-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.websocket_service.app.main:app", "--host", "0.0.0.0", "--port", "8008"]
+    ports:
+      - "8008:8008"
+
+  ai-engine:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "ai_engine.app.main:app", "--host", "0.0.0.0", "--port", "8010"]
+    ports:
+      - "8010:8010"
+
+  score-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.score_service.app.main:app", "--host", "0.0.0.0", "--port", "8014"]
+    environment:
+      AI_SERVICE_URL: http://ai-engine:8010
+      AI_SCORING_ENABLED: "true"
+    ports:
+      - "8014:8014"
+    depends_on:
+      - ai-engine
+
+  data-platform:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "data_platform.app.main:app", "--host", "0.0.0.0", "--port", "8011"]
+    environment:
+      DATA_PLATFORM_STORAGE_BACKEND: clickhouse
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: market_intelligence
+    ports:
+      - "8011:8011"
+    depends_on:
+      - clickhouse
+
+  data-platform-worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "-m", "data_platform.app.consumer_main"]
+    environment:
+      DATA_PLATFORM_STORAGE_BACKEND: clickhouse
+      DATA_PLATFORM_KAFKA_TOPICS: market.ticker,market.kline,market.trade,market.funding,market.open_interest,market.liquidation,feature.updated,ranking.updated,ranking.entered,ranking.exited,ranking.moved,signal.created
+      DATA_PLATFORM_KAFKA_GROUP_ID: data-platform
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: market_intelligence
+    depends_on:
+      - kafka
+      - clickhouse
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.notification_service.app.main:app", "--host", "0.0.0.0", "--port", "8012"]
+    environment:
+      WEBSOCKET_SERVICE_URL: http://websocket-service:8008
+      NOTIFICATION_WEBHOOK_URL: ${NOTIFICATION_WEBHOOK_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      NOTIFICATION_EMAIL_FROM: ${NOTIFICATION_EMAIL_FROM:-}
+    depends_on:
+      - websocket-service
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["uvicorn", "services.user_service.app.main:app", "--host", "0.0.0.0", "--port", "8013"]
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set to a strong secret}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN must be set}
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-3600}
+
+  collector-service:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "-m", "services.collector_service.app.main"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      COLLECTOR_EXCHANGE: binance
+      COLLECTOR_SYMBOLS: BTCUSDT,ETHUSDT
+      COLLECTOR_INTERVAL_SECONDS: 5
+      COLLECTOR_AUTO_TOP_SYMBOLS: ${COLLECTOR_AUTO_TOP_SYMBOLS:-0}
+      COLLECTOR_DERIVATIVES_TOP_SYMBOLS: ${COLLECTOR_DERIVATIVES_TOP_SYMBOLS:-0}
+      COLLECTOR_DERIVATIVES_INTERVAL_SECONDS: ${COLLECTOR_DERIVATIVES_INTERVAL_SECONDS:-60}
+      COLLECTOR_DERIVATIVE_REQUEST_DELAY_SECONDS: ${COLLECTOR_DERIVATIVE_REQUEST_DELAY_SECONDS:-0.1}
+    depends_on:
+      - kafka
+
+  market-backfill-scheduler:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.service
+    command: ["python", "scripts/market_backfill_scheduler.py"]
+    environment:
+      HISTORICAL_BACKFILL_ENABLED: ${HISTORICAL_BACKFILL_ENABLED:-false}
+      HISTORICAL_BACKFILL_HOUR_UTC: ${HISTORICAL_BACKFILL_HOUR_UTC:-2}
+      HISTORICAL_BACKFILL_DAYS: ${HISTORICAL_BACKFILL_DAYS:-2}
+      HISTORICAL_BACKFILL_INTERVAL: ${HISTORICAL_BACKFILL_INTERVAL:-1h}
+      HISTORICAL_BACKFILL_POLL_SECONDS: ${HISTORICAL_BACKFILL_POLL_SECONDS:-60}
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: market_intelligence
+    depends_on:
+      - clickhouse
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: market_intelligence
+      MYSQL_USER: mip
+      MYSQL_PASSWORD: mip_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../sql/mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ../sql/clickhouse:/docker-entrypoint-initdb.d:ro
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api-gateway
+      - market-service
+      - ranking-service
+      - websocket-service
+      - data-platform
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  mysql-data:
+  redis-data:
+  clickhouse-data:
+  grafana-data:

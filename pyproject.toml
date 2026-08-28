@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "market-intelligence-platform"
+version = "0.1.0"
+description = "API-first cryptocurrency market intelligence platform MVP."
+requires-python = ">=3.12"
+dependencies = [
+    "aiokafka>=0.11.0",
+    "fastapi>=0.115.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.8.0",
+    "redis>=5.0.0",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.6.0",
+]
+
+# The repository intentionally keeps several independently importable Python
+# roots.  Configure them explicitly so editable installs do not rely on
+# setuptools' flat-layout auto-discovery.
+[tool.setuptools]
+packages = [
+    "services",
+    "services.alert_service",
+    "services.alert_service.app",
+    "services.api_gateway",
+    "services.api_gateway.app",
+    "services.auth_service",
+    "services.auth_service.app",
+    "services.collector_service",
+    "services.collector_service.app",
+    "services.feature_service",
+    "services.feature_service.app",
+    "services.feature_store_service",
+    "services.feature_store_service.app",
+    "services.history_service",
+    "services.history_service.app",
+    "services.market_service",
+    "services.market_service.app",
+    "services.notification_service",
+    "services.notification_service.app",
+    "services.ranking_service",
+    "services.ranking_service.app",
+    "services.rule_service",
+    "services.rule_service.app",
+    "services.score_service",
+    "services.score_service.app",
+    "services.screener_service",
+    "services.screener_service.app",
+    "services.signal_service",
+    "services.signal_service.app",
+    "services.user_service",
+    "services.user_service.app",
+    "services.websocket_service",
+    "services.websocket_service.app",
+    "mip_common",
+    "ai_engine",
+    "ai_engine.app",
+    "data_platform",
+    "data_platform.app",
+    "market_intelligence",
+]
+package-dir = { services = "backend/services", mip_common = "backend/common/mip_common", ai_engine = "ai-engine/ai_engine", data_platform = "data-platform/data_platform", market_intelligence = "sdk/market_intelligence" }
+
+[tool.pytest.ini_options]
+addopts = "-q"
+asyncio_mode = "auto"
+pythonpath = ["backend", "backend/common", "data-platform", "sdk"]
+testpaths = ["backend/tests", "sdk/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008", "UP046", "UP047"]
