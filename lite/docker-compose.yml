@@ -182,7 +182,7 @@ services:
     depends_on: [kafka, clickhouse]
 
   history-service:
-    build: { context: ${PROJECT_ROOT:-..}, dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.history_service.app.main:app", "--host", "0.0.0.0", "--port", "8009"]
     environment:
       MARKET_SERVICE_URL: http://market-service:8001
