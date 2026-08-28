@@ -4,7 +4,7 @@
 services:
   frontend:
     build:
-      context: "${PROJECT_ROOT:-..}"
+      context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}"
       dockerfile: lite/frontend/Dockerfile
     ports:
       - "${LITE_BIND_ADDRESS:-127.0.0.1}:${LITE_FRONTEND_PORT:-18080}:80"
@@ -13,7 +13,7 @@ services:
 
   api-gateway:
     build:
-      context: "${PROJECT_ROOT:-..}"
+      context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}"
       dockerfile: lite/Dockerfile.service
     command: ["uvicorn", "services.api_gateway.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
@@ -36,7 +36,7 @@ services:
       - history-service
 
   collector-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "-m", "services.collector_service.app.main"]
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -49,13 +49,13 @@ services:
     depends_on: [kafka]
 
   market-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.market_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
     environment: { REDIS_URL: redis://redis:6379/0, REPOSITORY_BACKEND: redis }
     depends_on: [redis]
 
   market-worker:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "-m", "services.market_service.app.consumer_main"]
     environment:
       REDIS_URL: redis://redis:6379/0
@@ -64,13 +64,13 @@ services:
     depends_on: [redis, kafka]
 
   feature-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.feature_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
     environment: { REDIS_URL: redis://redis:6379/0, REPOSITORY_BACKEND: redis }
     depends_on: [redis]
 
   feature-worker:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "-m", "services.feature_service.app.consumer_main"]
     environment:
       REDIS_URL: redis://redis:6379/0
@@ -79,17 +79,17 @@ services:
     depends_on: [redis, kafka]
 
   ai-engine:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "ai_engine.app.main:app", "--host", "0.0.0.0", "--port", "8010"]
 
   score-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.score_service.app.main:app", "--host", "0.0.0.0", "--port", "8014"]
     environment: { AI_SERVICE_URL: http://ai-engine:8010, AI_SCORING_ENABLED: "true" }
     depends_on: [ai-engine]
 
   ranking-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.ranking_service.app.main:app", "--host", "0.0.0.0", "--port", "8004"]
     environment:
       REDIS_URL: redis://redis:6379/0
@@ -101,7 +101,7 @@ services:
     depends_on: [redis, ai-engine, score-service]
 
   signal-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.signal_service.app.main:app", "--host", "0.0.0.0", "--port", "8005"]
     environment:
       REDIS_URL: redis://redis:6379/0
@@ -110,7 +110,7 @@ services:
     depends_on: [redis]
 
   signal-generator-worker:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "/app/lite/workers/signal_generator_worker.py"]
     environment:
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
@@ -124,11 +124,11 @@ services:
     depends_on: [ranking-service, signal-service, data-platform, websocket-service, notification-service]
 
   rule-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.rule_service.app.main:app", "--host", "0.0.0.0", "--port", "8015"]
 
   alert-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.alert_service.app.main:app", "--host", "0.0.0.0", "--port", "8006"]
     environment:
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
@@ -136,17 +136,17 @@ services:
     depends_on: [websocket-service]
 
   websocket-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.websocket_service.app.main:app", "--host", "0.0.0.0", "--port", "8008"]
 
   notification-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.notification_service.app.main:app", "--host", "0.0.0.0", "--port", "8012"]
     environment: { WEBSOCKET_SERVICE_URL: http://websocket-service:8008 }
     depends_on: [websocket-service]
 
   ranking-monitor-worker:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "-m", "services.ranking_service.app.monitor_worker"]
     environment:
       RANKING_SERVICE_URL: http://ranking-service:8004
@@ -161,7 +161,7 @@ services:
     depends_on: [ranking-service, data-platform, websocket-service, notification-service]
 
   data-platform:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "data_platform.app.main:app", "--host", "0.0.0.0", "--port", "8011"]
     environment:
       DATA_PLATFORM_STORAGE_BACKEND: clickhouse
@@ -170,7 +170,7 @@ services:
     depends_on: [clickhouse]
 
   data-platform-worker:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "-m", "data_platform.app.consumer_main"]
     environment:
       DATA_PLATFORM_STORAGE_BACKEND: clickhouse
@@ -182,7 +182,7 @@ services:
     depends_on: [kafka, clickhouse]
 
   history-service:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["uvicorn", "services.history_service.app.main:app", "--host", "0.0.0.0", "--port", "8009"]
     environment:
       MARKET_SERVICE_URL: http://market-service:8001
@@ -192,7 +192,7 @@ services:
     depends_on: [market-service, feature-service, signal-service, data-platform]
 
   market-backfill-scheduler:
-    build: { context: "${PROJECT_ROOT:-..}", dockerfile: lite/Dockerfile.service }
+    build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: lite/Dockerfile.service }
     command: ["python", "scripts/market_backfill_scheduler.py"]
     environment:
       HISTORICAL_BACKFILL_ENABLED: ${HISTORICAL_BACKFILL_ENABLED:-true}
@@ -229,7 +229,7 @@ services:
     image: clickhouse/clickhouse-server:24.8
     volumes:
       - clickhouse-data:/var/lib/clickhouse
-      - "${PROJECT_ROOT:-..}/sql/clickhouse:/docker-entrypoint-initdb.d:ro"
+      - "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}/sql/clickhouse:/docker-entrypoint-initdb.d:ro"
 
 volumes:
   redis-data:
