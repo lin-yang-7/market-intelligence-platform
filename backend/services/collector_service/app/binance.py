@@ -59,7 +59,9 @@ class BinanceTickerConnector:
     async def fetch_funding(self, symbol: str) -> MarketEvent:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self.futures_base_url, timeout=self.timeout
+        ) as client:
             response = await client.get("/fapi/v1/premiumIndex", params={"symbol": symbol.upper()})
             response.raise_for_status()
             payload = response.json()
@@ -80,7 +82,9 @@ class BinanceTickerConnector:
     async def fetch_open_interest(self, symbol: str) -> MarketEvent:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self.futures_base_url, timeout=self.timeout
+        ) as client:
             response = await client.get("/fapi/v1/openInterest", params={"symbol": symbol.upper()})
             response.raise_for_status()
             payload = response.json()
@@ -101,7 +105,9 @@ class BinanceTickerConnector:
     async def fetch_liquidations(self, symbol: str, limit: int = 20) -> list[MarketEvent]:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self.futures_base_url, timeout=self.timeout
+        ) as client:
             response = await client.get(
                 "/fapi/v1/allForceOrders",
                 params={"symbol": symbol.upper(), "limit": max(1, min(limit, 100))},
