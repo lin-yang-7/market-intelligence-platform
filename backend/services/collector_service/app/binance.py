@@ -1,16 +1,27 @@
+import os
+
 from mip_common.events import MarketEvent, MarketTickerData
 from mip_common.models import model_to_dict
 from mip_common.responses import now_ms
 
 
 class BinanceTickerConnector:
-    base_url = "https://api.binance.com"
-    futures_base_url = "https://fapi.binance.com"
+    def __init__(self) -> None:
+        # Binance recommends data-api.binance.vision for public spot market
+        # data.  It is independent from the trading API gateway and is often
+        # reachable when api.binance.com is not.
+        self.base_url = os.getenv(
+            "BINANCE_SPOT_BASE_URL", "https://data-api.binance.vision"
+        ).rstrip("/")
+        self.futures_base_url = os.getenv(
+            "BINANCE_FUTURES_BASE_URL", "https://fapi.binance.com"
+        ).rstrip("/")
+        self.timeout = float(os.getenv("BINANCE_HTTP_TIMEOUT_SECONDS", "20"))
 
     async def fetch_top_usdt_symbols(self, limit: int) -> list[str]:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.base_url, timeout=10) as client:
+        async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             response = await client.get("/api/v3/ticker/24hr")
             response.raise_for_status()
             payload = response.json()
@@ -26,7 +37,7 @@ class BinanceTickerConnector:
     async def fetch_ticker(self, symbol: str) -> MarketEvent:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.base_url, timeout=10) as client:
+        async with httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout) as client:
             response = await client.get("/api/v3/ticker/24hr", params={"symbol": symbol.upper()})
             response.raise_for_status()
             payload = response.json()
@@ -48,7 +59,7 @@ class BinanceTickerConnector:
     async def fetch_funding(self, symbol: str) -> MarketEvent:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=10) as client:
+        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
             response = await client.get("/fapi/v1/premiumIndex", params={"symbol": symbol.upper()})
             response.raise_for_status()
             payload = response.json()
@@ -69,7 +80,7 @@ class BinanceTickerConnector:
     async def fetch_open_interest(self, symbol: str) -> MarketEvent:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=10) as client:
+        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
             response = await client.get("/fapi/v1/openInterest", params={"symbol": symbol.upper()})
             response.raise_for_status()
             payload = response.json()
@@ -90,7 +101,7 @@ class BinanceTickerConnector:
     async def fetch_liquidations(self, symbol: str, limit: int = 20) -> list[MarketEvent]:
         import httpx
 
-        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=10) as client:
+        async with httpx.AsyncClient(base_url=self.futures_base_url, timeout=self.timeout) as client:
             response = await client.get(
                 "/fapi/v1/allForceOrders",
                 params={"symbol": symbol.upper(), "limit": max(1, min(limit, 100))},
