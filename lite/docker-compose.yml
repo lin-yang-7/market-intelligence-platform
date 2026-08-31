@@ -229,11 +229,10 @@ services:
     depends_on: [zookeeper]
 
   clickhouse:
-    build:
-      context: ../../../../../wwwroot/market-intelligence-platform
-      dockerfile: lite/Dockerfile.clickhouse
+    image: clickhouse/clickhouse-server:24.8
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+      - ../../../../../wwwroot/market-intelligence-platform/sql/clickhouse:/docker-entrypoint-initdb.d:ro
 
 volumes:
   redis-data:
