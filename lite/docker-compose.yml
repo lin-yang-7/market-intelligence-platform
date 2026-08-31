@@ -17,7 +17,7 @@ services:
       dockerfile: /www/wwwroot/market-intelligence-platform/lite/Dockerfile.service
     command: ["uvicorn", "services.api_gateway.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+      INTERNAL_SERVICE_TOKEN: "${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}"
       MARKET_SERVICE_URL: http://market-service:8001
       FEATURE_SERVICE_URL: http://feature-service:8003
       RANKING_SERVICE_URL: http://ranking-service:8004
@@ -41,11 +41,11 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       COLLECTOR_EXCHANGE: binance
-      COLLECTOR_SYMBOLS: ${COLLECTOR_SYMBOLS:-BTCUSDT,ETHUSDT}
-      COLLECTOR_INTERVAL_SECONDS: ${COLLECTOR_INTERVAL_SECONDS:-5}
-      COLLECTOR_AUTO_TOP_SYMBOLS: ${COLLECTOR_AUTO_TOP_SYMBOLS:-50}
-      COLLECTOR_DERIVATIVES_TOP_SYMBOLS: ${COLLECTOR_DERIVATIVES_TOP_SYMBOLS:-20}
-      COLLECTOR_DERIVATIVES_INTERVAL_SECONDS: ${COLLECTOR_DERIVATIVES_INTERVAL_SECONDS:-60}
+      COLLECTOR_SYMBOLS: "${COLLECTOR_SYMBOLS:-BTCUSDT,ETHUSDT}"
+      COLLECTOR_INTERVAL_SECONDS: "${COLLECTOR_INTERVAL_SECONDS:-5}"
+      COLLECTOR_AUTO_TOP_SYMBOLS: "${COLLECTOR_AUTO_TOP_SYMBOLS:-50}"
+      COLLECTOR_DERIVATIVES_TOP_SYMBOLS: "${COLLECTOR_DERIVATIVES_TOP_SYMBOLS:-20}"
+      COLLECTOR_DERIVATIVES_INTERVAL_SECONDS: "${COLLECTOR_DERIVATIVES_INTERVAL_SECONDS:-60}"
     depends_on: [kafka]
 
   market-service:
@@ -106,21 +106,21 @@ services:
     environment:
       REDIS_URL: redis://redis:6379/0
       REPOSITORY_BACKEND: redis
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+      INTERNAL_SERVICE_TOKEN: "${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}"
     depends_on: [redis]
 
   signal-generator-worker:
     build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: /www/wwwroot/market-intelligence-platform/lite/Dockerfile.service }
     command: ["python", "/app/lite/workers/signal_generator_worker.py"]
     environment:
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+      INTERNAL_SERVICE_TOKEN: "${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}"
       RANKING_SERVICE_URL: http://ranking-service:8004
       SIGNAL_SERVICE_URL: http://signal-service:8005
       DATA_PLATFORM_URL: http://data-platform:8011
       WEBSOCKET_SERVICE_URL: http://websocket-service:8008
       NOTIFICATION_SERVICE_URL: http://notification-service:8012
       ALERT_SERVICE_URL: http://alert-service:8006
-      SIGNAL_GENERATOR_INTERVAL_SECONDS: ${SIGNAL_GENERATOR_INTERVAL_SECONDS:-60}
+      SIGNAL_GENERATOR_INTERVAL_SECONDS: "${SIGNAL_GENERATOR_INTERVAL_SECONDS:-60}"
     depends_on: [ranking-service, signal-service, data-platform, websocket-service, notification-service]
 
   rule-service:
@@ -131,7 +131,7 @@ services:
     build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: /www/wwwroot/market-intelligence-platform/lite/Dockerfile.service }
     command: ["uvicorn", "services.alert_service.app.main:app", "--host", "0.0.0.0", "--port", "8006"]
     environment:
-      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}
+      INTERNAL_SERVICE_TOKEN: "${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN in .env}"
       WEBSOCKET_SERVICE_URL: http://websocket-service:8008
     depends_on: [websocket-service]
 
@@ -156,7 +156,7 @@ services:
       RANKING_MONITOR_ENABLED: "true"
       RANKING_MONITOR_EXCHANGE: binance
       RANKING_MONITOR_TYPES: abnormalBullish,opportunityBullish,riskBearish
-      RANKING_MONITOR_INTERVAL_SECONDS: ${RANKING_MONITOR_INTERVAL_SECONDS:-60}
+      RANKING_MONITOR_INTERVAL_SECONDS: "${RANKING_MONITOR_INTERVAL_SECONDS:-60}"
       RANKING_MONITOR_LIMIT: 50
     depends_on: [ranking-service, data-platform, websocket-service, notification-service]
 
@@ -195,11 +195,11 @@ services:
     build: { context: "${PROJECT_ROOT:-/www/wwwroot/market-intelligence-platform}", dockerfile: /www/wwwroot/market-intelligence-platform/lite/Dockerfile.service }
     command: ["python", "scripts/market_backfill_scheduler.py"]
     environment:
-      HISTORICAL_BACKFILL_ENABLED: ${HISTORICAL_BACKFILL_ENABLED:-true}
-      HISTORICAL_BACKFILL_HOUR_UTC: ${HISTORICAL_BACKFILL_HOUR_UTC:-2}
-      HISTORICAL_BACKFILL_DAYS: ${HISTORICAL_BACKFILL_DAYS:-2}
-      HISTORICAL_BACKFILL_INTERVAL: ${HISTORICAL_BACKFILL_INTERVAL:-1h}
-      HISTORICAL_BACKFILL_POLL_SECONDS: ${HISTORICAL_BACKFILL_POLL_SECONDS:-60}
+      HISTORICAL_BACKFILL_ENABLED: "${HISTORICAL_BACKFILL_ENABLED:-true}"
+      HISTORICAL_BACKFILL_HOUR_UTC: "${HISTORICAL_BACKFILL_HOUR_UTC:-2}"
+      HISTORICAL_BACKFILL_DAYS: "${HISTORICAL_BACKFILL_DAYS:-2}"
+      HISTORICAL_BACKFILL_INTERVAL: "${HISTORICAL_BACKFILL_INTERVAL:-1h}"
+      HISTORICAL_BACKFILL_POLL_SECONDS: "${HISTORICAL_BACKFILL_POLL_SECONDS:-60}"
       CLICKHOUSE_URL: http://clickhouse:8123
       CLICKHOUSE_DATABASE: market_intelligence
     depends_on: [clickhouse]
