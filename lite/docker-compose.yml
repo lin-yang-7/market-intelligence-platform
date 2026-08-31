@@ -4,9 +4,10 @@
 services:
   frontend:
     build:
-      # aaPanel stores Compose text in its own directory.  A Git build context
-      # keeps Docker's COPY inputs together instead of sending an empty context.
-      context: "https://github.com/lin-yang-7/market-intelligence-platform.git#master"
+      # aaPanel stores this Compose project at /www/server/panel/data/compose/<name>.
+      # Use an explicit local relative path so the complete server-side project
+      # directory, rather than aaPanel's empty Compose directory, is built.
+      context: ../../../../../wwwroot/market-intelligence-platform
       dockerfile: lite/frontend/Dockerfile
     ports:
       - "${LITE_BIND_ADDRESS:-127.0.0.1}:${LITE_FRONTEND_PORT:-18080}:80"
@@ -15,7 +16,7 @@ services:
 
   api-gateway:
     build: &service-build
-      context: "https://github.com/lin-yang-7/market-intelligence-platform.git#master"
+      context: ../../../../../wwwroot/market-intelligence-platform
       dockerfile: lite/Dockerfile.service
     command: ["uvicorn", "services.api_gateway.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
@@ -229,7 +230,7 @@ services:
 
   clickhouse:
     build:
-      context: "https://github.com/lin-yang-7/market-intelligence-platform.git#master"
+      context: ../../../../../wwwroot/market-intelligence-platform
       dockerfile: lite/Dockerfile.clickhouse
     volumes:
       - clickhouse-data:/var/lib/clickhouse
