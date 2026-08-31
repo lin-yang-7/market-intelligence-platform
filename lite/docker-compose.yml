@@ -60,6 +60,7 @@ services:
   market-worker:
     build: *service-build
     command: ["python", "-m", "services.market_service.app.consumer_main"]
+    restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
       REPOSITORY_BACKEND: redis
@@ -75,6 +76,7 @@ services:
   feature-worker:
     build: *service-build
     command: ["python", "-m", "services.feature_service.app.consumer_main"]
+    restart: unless-stopped
     environment:
       REDIS_URL: redis://redis:6379/0
       REPOSITORY_BACKEND: redis
@@ -175,6 +177,7 @@ services:
   data-platform-worker:
     build: *service-build
     command: ["python", "-m", "data_platform.app.consumer_main"]
+    restart: unless-stopped
     environment:
       DATA_PLATFORM_STORAGE_BACKEND: clickhouse
       DATA_PLATFORM_KAFKA_TOPICS: market.ticker,market.kline,market.trade,market.funding,market.open_interest,market.liquidation,feature.updated,ranking.updated,ranking.entered,ranking.exited,ranking.moved,signal.created
