@@ -218,9 +218,14 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.0
     environment: { ZOOKEEPER_CLIENT_PORT: 2181, ZOOKEEPER_TICK_TIME: 2000 }
+    restart: unless-stopped
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
 
   kafka:
     image: confluentinc/cp-kafka:7.7.0
+    restart: unless-stopped
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -230,6 +235,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     depends_on: [zookeeper]
+    volumes:
+      - kafka-data:/var/lib/kafka/data
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.8
@@ -240,3 +247,6 @@ services:
 volumes:
   redis-data:
   clickhouse-data:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
