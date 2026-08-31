@@ -1,4 +1,6 @@
+import asyncio
 import json
+import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -66,14 +68,26 @@ class KafkaEventConsumer:
         self.consumer_factory = consumer_factory
 
     async def consume(self, handler: Callable[[dict[str, Any]], Awaitable[None]]) -> None:
-        consumer = self._create_consumer()
-        await consumer.start()
-        try:
-            async for message in consumer:
-                await handler(deserialize_event(message.value))
-                await consumer.commit()
-        finally:
-            await consumer.stop()
+        # Compose only guarantees start order.  Kafka can still be starting
+        # while consumer containers are launched, so keep consumers alive and
+        # retry bootstrap rather than exiting permanently on a cold start.
+        from aiokafka.errors import KafkaConnectionError
+
+        while True:
+            consumer = self._create_consumer()
+            try:
+                await consumer.start()
+                async for message in consumer:
+                    await handler(deserialize_event(message.value))
+                    await consumer.commit()
+            except KafkaConnectionError:
+                logging.getLogger(__name__).warning(
+                    "Kafka is not ready for topic %s; retrying in 5 seconds",
+                    self.topic,
+                )
+            finally:
+                await consumer.stop()
+            await asyncio.sleep(5)
 
     def _create_consumer(self):
         if self.consumer_factory is not None:
