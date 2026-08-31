@@ -1,0 +1,5 @@
+FROM clickhouse/clickhouse-server:24.8
+
+# Keep the initial schema inside the image so aaPanel does not need to supply a
+# host-path build context or bind mount.
+COPY sql/clickhouse /docker-entrypoint-initdb.d
